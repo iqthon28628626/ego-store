@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EGO STORE</title>
+  <style>
+    :root{--bg:#080808;--panel:#151515;--line:#292929;--white:#fff;--muted:#aaa}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font-family:Arial,Tahoma,sans-serif}
+    header{padding:22px 6%;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);position:sticky;top:0;background:#080808ee;z-index:2}
+    .logo{font-size:27px;font-weight:900;letter-spacing:4px}.logo small{display:block;font-size:10px;letter-spacing:5px;text-align:center}
+    nav{display:flex;gap:16px;flex-wrap:wrap}button,.btn{background:#fff;color:#000;border:0;border-radius:5px;padding:11px 16px;font-weight:bold;cursor:pointer}
+    button.secondary,.btn.secondary{background:#222;color:#fff;border:1px solid #444}
+    main{max-width:1150px;margin:auto;padding:35px 20px}.hero{text-align:center;padding:55px 10px 40px}.hero h1{font-size:clamp(38px,8vw,76px);margin:0;letter-spacing:5px}.hero p,.muted{color:var(--muted)}
+    .tabs{display:flex;gap:10px;justify-content:center;margin:22px 0 30px;flex-wrap:wrap}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+    .card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px}
+    .card img{width:100%;height:260px;object-fit:cover;background:#222;border-radius:7px}
+    .price{font-size:20px;font-weight:bold;margin:12px 0}
+    input,textarea,select{width:100%;padding:12px;margin:7px 0 13px;background:#090909;color:#fff;border:1px solid #444;border-radius:5px}
+    label{display:block;color:#ddd;font-size:14px}
+    .formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+    .hidden{display:none!important}.notice{padding:12px;background:#202020;border:1px solid #444;border-radius:7px;margin:12px 0;color:#ddd}
+    footer{text-align:center;padding:30px;color:#777;border-top:1px solid var(--line);margin-top:45px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">EGO<small>STORE</small></div>
+  <nav><button class="secondary" onclick="showPage('ready')">هوديز جاهزة</button><button class="secondary" onclick="showPage('custom')">صمّم هوديك</button><button class="secondary" onclick="showPage('admin')">لوحة الإدارة</button></nav>
+</header>
+<main>
+  <section class="hero"><h1>EGO STORE</h1><p>WEAR YOUR IDENTITY.</p></section>
+
+  <section id="readyPage">
+    <h2>هوديز جاهزة</h2><p class="muted">اختار التصميم المناسب ليك واطلبه بسهولة.</p>
+    <div id="products" class="grid"><div class="notice">جاري تحميل المنتجات...</div></div>
+  </section>
+
+  <section id="customPage" class="hidden">
+    <h2>صمّم هوديك بنفسك</h2><p class="muted">اختار المقاس واللون وارفع صورة التصميم. سيتم تأكيد السعر معاك قبل تنفيذ الطلب.</p>
+    <div class="panel">
+      <div class="formgrid">
+        <div><label>اللون</label><select id="customColor"><option>أبيض</option><option>أسود</option><option>رمادي</option><option>بيج</option></select></div>
+        <div><label>المقاس</label><select id="customSize"><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option></select></div>
+        <div><label>مكان التصميم</label><select id="customPlace"><option>الصدر</option><option>الظهر</option><option>الصدر والظهر</option><option>الكم</option></select></div>
+      </div>
+      <label>ارفع صورة التصميم</label><input type="file" id="designFile" accept="image/*">
+      <label>ملاحظات إضافية</label><textarea id="designNotes" rows="3" placeholder="اكتب أي تفاصيل عن التصميم..."></textarea>
+      <label>اسمك</label><input id="customName" placeholder="الاسم">
+      <label>رقم الهاتف</label><input id="customPhone" placeholder="01xxxxxxxxx">
+      <label>العنوان والمحافظة</label><textarea id="customAddress" rows="2"></textarea>
+      <button onclick="sendCustomOrder()">إرسال طلب التصميم عبر واتساب</button>
+    </div>
+  </section>
+
+  <section id="adminPage" class="hidden">
+    <h2>لوحة تحكم EGO</h2>
+    <div id="loginBox" class="panel">
+      <p class="muted">سجّل الدخول ببريد وكلمة مرور حساب المدير الذي أنشأته في Supabase.</p>
+      <label>البريد الإلكتروني</label><input id="adminEmail" type="email">
+      <label>كلمة المرور</label><input id="adminPassword" type="password">
+      <button onclick="adminLogin()">تسجيل الدخول</button>
+    </div>
+    <div id="adminPanel" class="hidden">
+      <div class="notice">من هنا تقدر تضيف منتج أو تعدل بياناته وتحذفه. الصور تُرفع إلى مساحة ego-products.</div>
+      <h3 id="formTitle">إضافة هودي جديد</h3>
+      <input id="editId" type="hidden">
+      <label>اسم المنتج</label><input id="pName">
+      <label>الوصف</label><textarea id="pDescription" rows="2"></textarea>
+      <label>السعر بالجنيه</label><input id="pPrice" type="number" min="0">
+      <label>صورة المنتج</label><input id="pImage" type="file" accept="image/*">
+      <div class="actions"><button onclick="saveProduct()">حفظ المنتج</button><button class="secondary" onclick="clearProductForm()">تفريغ الحقول</button><button class="secondary" onclick="adminLogout()">تسجيل الخروج</button></div>
+      <h3>المنتجات الحالية</h3><div id="adminProducts" class="grid"></div>
+    </div>
+    <div id="status" class="notice hidden"></div>
+  </section>
+</main>
+<footer>EGO STORE · Alexandria, Egypt</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ضع بيانات مشروعك هنا. استخدم Project URL و Publishable key فقط، ولا تضع Secret key. */
+const SUPABASE_URL = "PASTE_PROJECT_URL_HERE";
+const SUPABASE_PUBLISHABLE_KEY = "PASTE_PUBLISHABLE_KEY_HERE";
+const WHATSAPP_NUMBER = "201000000000"; // استبدله برقم واتساب المتجر بصيغة دولية بدون +
+let db = null, productsCache = [];
+
+function configured(){return SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("PASTE_") && !SUPABASE_PUBLISHABLE_KEY.includes("PASTE_")}
+function init(){if(configured() && window.supabase) db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY); loadProducts()}
+function showPage(page){
+  document.getElementById('readyPage').classList.toggle('hidden',page!=='ready');
+  document.getElementById('customPage').classList.toggle('hidden',page!=='custom');
+  document.getElementById('adminPage').classList.toggle('hidden',page!=='admin');
+  if(page==='admin') checkSession();
+}
+function msg(t){let el=document.getElementById('status');el.textContent=t;el.classList.remove('hidden')}
+function money(n){return Number(n||0).toLocaleString('ar-EG')+' ج.م'}
+async function loadProducts(){
+  const box=document.getElementById('products');
+  if(!db){box.innerHTML='<div class="notice">اربط الموقع ببيانات Supabase أولاً من داخل index.html.</div>';return}
+  const {data,error}=await db.from('products').select('*').eq('active',true).order('created_at',{ascending:false});
+  if(error){box.innerHTML='<div class="notice">تعذر تحميل المنتجات: '+error.message+'</div>';return}
+  productsCache=data||[];
+  box.innerHTML=productsCache.length?productsCache.map(p=>`<article class="card"><img src="${escapeHtml(p.image_url||'')}" alt=""><h3>${escapeHtml(p.name)}</h3><p class="muted">${escapeHtml(p.description||'')}</p><div class="price">${money(p.price)}</div><button onclick="orderReady('${p.id}')">اطلب الآن</button></article>`).join(''):'<div class="notice">لا توجد منتجات حالياً. أضف منتجات من لوحة الإدارة.</div>';
+}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function orderReady(id){
+  const p=productsCache.find(x=>x.id===id);if(!p)return;
+  const name=prompt('اكتب اسمك');if(!name)return;
+  const phone=prompt('رقم هاتفك');if(!phone)return;
+  const address=prompt('المحافظة والعنوان');if(!address)return;
+  const text=`طلب جديد من EGO STORE%0Aالمنتج: ${encodeURIComponent(p.name)}%0Aالسعر: ${encodeURIComponent(p.price)} جنيه%0Aالاسم: ${encodeURIComponent(name)}%0Aالهاتف: ${encodeURIComponent(phone)}%0Aالعنوان: ${encodeURIComponent(address)}`;
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`,'_blank');
+}
+async function sendCustomOrder(){
+  const name=document.getElementById('customName').value.trim(),phone=document.getElementById('customPhone').value.trim(),address=document.getElementById('customAddress').value.trim();
+  if(!name||!phone||!address){alert('اكتب الاسم ورقم الهاتف والعنوان');return}
+  const f=document.getElementById('designFile').files[0];
+  const text=`طلب تصميم مخصص من EGO STORE%0Aاللون: ${encodeURIComponent(document.getElementById('customColor').value)}%0Aالمقاس: ${encodeURIComponent(document.getElementById('customSize').value)}%0Aمكان التصميم: ${encodeURIComponent(document.getElementById('customPlace').value)}%0Aملاحظات: ${encodeURIComponent(document.getElementById('designNotes').value)}%0Aالاسم: ${encodeURIComponent(name)}%0Aالهاتف: ${encodeURIComponent(phone)}%0Aالعنوان: ${encodeURIComponent(address)}%0Aملف التصميم: ${encodeURIComponent(f?f.name:'لم يتم إرفاق ملف')}`;
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`,'_blank');
+}
+async function adminLogin(){
+  if(!db){msg('أضف بيانات Supabase أولاً في index.html');return}
+  const {error}=await db.auth.signInWithPassword({email:document.getElementById('adminEmail').value,password:document.getElementById('adminPassword').value});
+  if(error){msg(error.message);return} checkSession();
+}
+async function checkSession(){
+  if(!db)return;
+  const {data}=await db.auth.getSession();
+  const logged=!!data.session;
+  document.getElementById('loginBox').classList.toggle('hidden',logged);
+  document.getElementById('adminPanel').classList.toggle('hidden',!logged);
+  if(logged)loadAdminProducts();
+}
+async function adminLogout(){await db.auth.signOut();checkSession()}
+function clearProductForm(){['editId','pName','pDescription','pPrice'].forEach(id=>document.getElementById(id).value='');document.getElementById('pImage').value='';document.getElementById('formTitle').textContent='إضافة هودي جديد'}
+async function saveProduct(){
+  if(!db)return;
+  const id=document.getElementById('editId').value,name=document.getElementById('pName').value.trim(),description=document.getElementById('pDescription').value.trim(),price=Number(document.getElementById('pPrice').value);
+  if(!name||!Number.isFinite(price)||price<0){alert('اكتب اسم المنتج وسعر صحيح');return}
+  let image_url=null;const file=document.getElementById('pImage').files[0];
+  if(file){
+    if(!file.type.startsWith('image/')){alert('اختار ملف صورة');return}
+    const path=Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const {error:upErr}=await db.storage.from('ego-products').upload(path,file,{upsert:true});
+    if(upErr){msg('فشل رفع الصورة: '+upErr.message);return}
+    image_url=db.storage.from('ego-products').getPublicUrl(path).data.publicUrl;
+  }
+  const payload={name,description,price,active:true};if(image_url)payload.image_url=image_url;
+  const result=id?await db.from('products').update(payload).eq('id',id):await db.from('products').insert(payload);
+  if(result.error){msg(result.error.message);return}
+  clearProductForm();loadProducts();loadAdminProducts();msg('تم حفظ المنتج');
+}
+async function loadAdminProducts(){
+  const {data,error}=await db.from('products').select('*').order('created_at',{ascending:false});
+  const box=document.getElementById('adminProducts');if(error){box.innerHTML=error.message;return}
+  box.innerHTML=(data||[]).map(p=>`<article class="card"><strong>${escapeHtml(p.name)}</strong><p>${money(p.price)}</p><div class="actions"><button class="secondary" onclick="editProduct('${p.id}')">تعديل</button><button class="secondary" onclick="deleteProduct('${p.id}')">حذف</button></div></article>`).join('');
+}
+async function editProduct(id){
+  const p= (await db.from('products').select('*').eq('id',id).single()).data;if(!p)return;
+  document.getElementById('editId').value=p.id;document.getElementById('pName').value=p.name;document.getElementById('pDescription').value=p.description||'';document.getElementById('pPrice').value=p.price;document.getElementById('formTitle').textContent='تعديل المنتج';
+}
+async function deleteProduct(id){if(!confirm('متأكد من حذف المنتج؟'))return;const {error}=await db.from('products').delete().eq('id',id);if(error){msg(error.message);return}loadProducts();loadAdminProducts()}
+init();
+</script>
+</body></html>
