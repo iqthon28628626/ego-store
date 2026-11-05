@@ -157,7 +157,7 @@ async function editProduct(id){
   document.getElementById('editId').value=p.id;document.getElementById('pName').value=p.name;document.getElementById('pDescription').value=p.description||'';document.getElementById('pPrice').value=p.price;document.getElementById('formTitle').textContent='تعديل المنتج';
 }
 async function deleteProduct(id){if(!confirm('متأكد من حذف المنتج؟'))return;const {error}=await db.from('products').delete().eq('id',id);if(error){msg(error.message);return}loadProducts();loadAdminProducts()}
-<let selectedOrder = null;
+let selectedOrder = null;
 
 async function submitOrder(){
   if(!db){alert('الاتصال بقاعدة البيانات غير جاهز');return}
