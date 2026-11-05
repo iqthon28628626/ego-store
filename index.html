@@ -181,20 +181,33 @@ async function submitOrder(){
     alert('اكتب كمية صحيحة');
     return;
   }
+const price = Number(selectedOrder.price);
+const shipping = 0;
+const subtotal = price * quantity;
+const total = subtotal + shipping;
 
-  const {error}=await db.from('orders').insert([{
-    name,
-    customer_name: name,
-    phone,
-    address,
-    product_name:selectedOrder.name,
-    product_price:Number(selectedOrder.price),
-    quantity,
-    size:document.getElementById('orderSize').value,
-    color:document.getElementById('orderColor').value,
-    payment_method:document.getElementById('paymentMethod').value
-  }]);
-
+const {error}=await db.from('orders').insert([{
+  name,
+  customer_name: name,
+  phone,
+  address,
+  items: [{
+    name: selectedOrder.name,
+    price: price,
+    quantity: quantity,
+    size: document.getElementById('orderSize').value,
+    color: document.getElementById('orderColor').value
+  }],
+  subtotal,
+  shipping,
+  total,
+  product_name: selectedOrder.name,
+  product_price: price,
+  quantity,
+  size: document.getElementById('orderSize').value,
+  color: document.getElementById('orderColor').value,
+  payment_method: document.getElementById('paymentMethod').value
+}]);
   if(error){
     alert('حصل خطأ: '+error.message);
     return;
