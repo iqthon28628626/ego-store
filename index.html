@@ -213,7 +213,8 @@ const {error}=await db.from('orders').insert([{
     return;
   }
 
-  alert('تم استلام طلبك بنجاح ❤️');
+  document.getElementById('successPage').style.display='flex';
+document.getElementById('successPage').scrollIntoView({behavior:'smooth'});
 }
  async function sendCustomOrder(){
   selectedOrder={
@@ -247,6 +248,77 @@ init();
   <button onclick="submitOrder()" style="width:100%;padding:15px;margin-top:20px;background:white;color:black;border:0;border-radius:8px;font-weight:bold">
     تأكيد الطلب
   </button>
+</section> 
+<style>
+#successPage{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:#080808;
+  color:white;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:20px;
+  animation:fadeIn .6s ease;
+}
+.success-card{
+  max-width:420px;
+  width:100%;
+  padding:35px 20px;
+  border:1px solid #333;
+  border-radius:20px;
+  animation:riseUp .7s ease;
+}
+.success-circle{
+  width:100px;
+  height:100px;
+  border:2px solid white;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 25px;
+  animation:pop .6s ease;
+}
+.success-check{
+  font-size:55px;
+  animation:check .7s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes riseUp{
+  from{transform:translateY(35px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+@keyframes pop{
+  0%{transform:scale(0)}
+  75%{transform:scale(1.15)}
+  100%{transform:scale(1)}
+}
+@keyframes check{
+  from{transform:scale(0) rotate(-45deg)}
+  to{transform:scale(1) rotate(0)}
+}
+</style>
+
+<section id="successPage">
+  <div class="success-card">
+    <div class="success-circle">
+      <span class="success-check">✓</span>
+    </div>
+
+    <h1>تم استلام طلبك!</h1>
+    <p>شكراً لاختيارك EGO STORE</p>
+    <p style="color:#aaa">طلبك وصل إلينا بنجاح، وسنتواصل معك قريباً لتأكيد التفاصيل.</p>
+
+    <h2 style="letter-spacing:5px">EGO STORE</h2>
+
+    <button onclick="location.reload()"
+      style="background:white;color:black;padding:14px 25px;border:0;border-radius:8px;font-weight:bold;cursor:pointer">
+      العودة للتسوق
+    </button>
+  </div>
 </section>
   </body>
 </html>
