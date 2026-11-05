@@ -184,6 +184,7 @@ async function submitOrder(){
 
   const {error}=await db.from('orders').insert([{
     name,
+    customer_name: name,
     phone,
     address,
     product_name:selectedOrder.name,
