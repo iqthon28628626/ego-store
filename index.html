@@ -51,7 +51,7 @@
       <label>اسمك</label><input id="customName" placeholder="الاسم">
       <label>رقم الهاتف</label><input id="customPhone" placeholder="01xxxxxxxxx">
       <label>العنوان والمحافظة</label><textarea id="customAddress" rows="2"></textarea>
-      <button onclick="sendCustomOrder()">إرسال طلب التصميم عبر واتساب</button>
+     <button onclick="sendCustomOrder()">إرسال طلب التصميم عبر واتساب</button>
     </div>
   </section>
 
@@ -107,19 +107,14 @@ async function loadProducts(){
 }
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function orderReady(id){
-  const p=productsCache.find(x=>x.id===id);if(!p)return;
-  const name=prompt('اكتب اسمك');if(!name)return;
-  const phone=prompt('رقم هاتفك');if(!phone)return;
-  const address=prompt('المحافظة والعنوان');if(!address)return;
-  const text=`طلب جديد من EGO STORE%0Aالمنتج: ${encodeURIComponent(p.name)}%0Aالسعر: ${encodeURIComponent(p.price)} جنيه%0Aالاسم: ${encodeURIComponent(name)}%0Aالهاتف: ${encodeURIComponent(phone)}%0Aالعنوان: ${encodeURIComponent(address)}`;
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`,'_blank');
+  const p=productsCache.find(x=>x.id===id);
+  if(!p)return;
+
+  selectedOrder=p;
+
+  document.getElementById('checkoutPage').style.display='block';
+  document.getElementById('checkoutPage').scrollIntoView({behavior:'smooth'});
 }
-async function sendCustomOrder(){
-  const name=document.getElementById('customName').value.trim(),phone=document.getElementById('customPhone').value.trim(),address=document.getElementById('customAddress').value.trim();
-  if(!name||!phone||!address){alert('اكتب الاسم ورقم الهاتف والعنوان');return}
-  const f=document.getElementById('designFile').files[0];
-  const text=`طلب تصميم مخصص من EGO STORE%0Aاللون: ${encodeURIComponent(document.getElementById('customColor').value)}%0Aالمقاس: ${encodeURIComponent(document.getElementById('customSize').value)}%0Aمكان التصميم: ${encodeURIComponent(document.getElementById('customPlace').value)}%0Aملاحظات: ${encodeURIComponent(document.getElementById('designNotes').value)}%0Aالاسم: ${encodeURIComponent(name)}%0Aالهاتف: ${encodeURIComponent(phone)}%0Aالعنوان: ${encodeURIComponent(address)}%0Aملف التصميم: ${encodeURIComponent(f?f.name:'لم يتم إرفاق ملف')}`;
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`,'_blank');
 }
 async function adminLogin(){
   if(!db){msg('أضف بيانات Supabase أولاً في index.html');return}
@@ -163,6 +158,80 @@ async function editProduct(id){
   document.getElementById('editId').value=p.id;document.getElementById('pName').value=p.name;document.getElementById('pDescription').value=p.description||'';document.getElementById('pPrice').value=p.price;document.getElementById('formTitle').textContent='تعديل المنتج';
 }
 async function deleteProduct(id){if(!confirm('متأكد من حذف المنتج؟'))return;const {error}=await db.from('products').delete().eq('id',id);if(error){msg(error.message);return}loadProducts();loadAdminProducts()}
-init();
+<let selectedOrder = null;
+
+async function submitOrder(){
+  if(!db){alert('الاتصال بقاعدة البيانات غير جاهز');return}
+
+  const name=document.getElementById('orderName').value.trim();
+  const phone=document.getElementById('orderPhone').value.trim();
+  const address=document.getElementById('orderAddress').value.trim();
+
+  if(!name||!phone||!address){
+    alert('اكتب الاسم ورقم الهاتف والعنوان');
+    return;
+  }
+
+  if(!selectedOrder){
+    alert('لم يتم تحديد المنتج');
+    return;
+  }
+
+  const quantity=Number(document.getElementById('orderQuantity').value);
+  if(!Number.isInteger(quantity)||quantity<1){
+    alert('اكتب كمية صحيحة');
+    return;
+  }
+
+  const {error}=await db.from('orders').insert([{
+    name,
+    phone,
+    address,
+    product_name:selectedOrder.name,
+    product_price:Number(selectedOrder.price),
+    quantity,
+    size:document.getElementById('orderSize').value,
+    color:document.getElementById('orderColor').value,
+    payment_method:document.getElementById('paymentMethod').value
+  }]);
+
+  if(error){
+    alert('حصل خطأ: '+error.message);
+    return;
+  }
+
+  alert('تم استلام طلبك بنجاح ❤️');
+}
+ async function sendCustomOrder(){
+  selectedOrder={
+    name:'تصميم هودي مخصص',
+    price:0
+  };
+
+  document.getElementById('checkoutPage').style.display='block';
+  document.getElementById('checkoutPage').scrollIntoView({behavior:'smooth'});
+} >init();
 </script>
-</body></html>
+<<section id="checkoutPage" style="display:none;max-width:650px;margin:40px auto;padding:25px;background:#111;color:white;border:1px solid #333;border-radius:15px">
+  <h2 style="text-align:center">EGO STORE | إتمام الطلب</h2>
+
+  <input id="orderName" placeholder="الاسم بالكامل" required>
+  <input id="orderPhone" placeholder="رقم الهاتف" required>
+  <input id="orderAddress" placeholder="المحافظة والعنوان بالتفصيل" required>
+
+  <input id="orderSize" placeholder="المقاس: S / M / L / XL">
+  <input id="orderColor" placeholder="اللون">
+  <input id="orderQuantity" type="number" min="1" value="1">
+
+  <h3>طريقة الدفع</h3>
+  <select id="paymentMethod">
+    <option value="cod">الدفع عند الاستلام</option>
+    <option value="instapay">InstaPay</option>
+    <option value="wallet">محفظة إلكترونية</option>
+  </select>
+
+  <button onclick="submitOrder()" style="width:100%;padding:15px;margin-top:20px;background:white;color:black;border:0;border-radius:8px;font-weight:bold">
+    تأكيد الطلب
+  </button>
+</section>
+  ><body></html>
