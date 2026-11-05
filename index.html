@@ -115,7 +115,6 @@ function orderReady(id){
   document.getElementById('checkoutPage').style.display='block';
   document.getElementById('checkoutPage').scrollIntoView({behavior:'smooth'});
 }
-}
 async function adminLogin(){
   if(!db){msg('أضف بيانات Supabase أولاً في index.html');return}
   const {error}=await db.auth.signInWithPassword({email:document.getElementById('adminEmail').value,password:document.getElementById('adminPassword').value});
