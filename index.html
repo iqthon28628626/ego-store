@@ -170,7 +170,17 @@ async function submitOrder(){
     alert('اكتب الاسم ورقم الهاتف والعنوان');
     return;
   }
+function updatePaymentDetails(){
+  const method = document.getElementById('paymentMethod').value;
+  document.getElementById('paymentDetails').style.display =
+    method === 'cod' ? 'none' : 'block';
 
+  document.getElementById('instapayDetails').style.display =
+    method === 'instapay' ? 'block' : 'none';
+
+  document.getElementById('orangeDetails').style.display =
+    method === 'wallet' ? 'block' : 'none';
+}
   if(!selectedOrder){
     alert('لم يتم تحديد المنتج');
     return;
@@ -239,12 +249,24 @@ init();
   <input id="orderQuantity" type="number" min="1" value="1">
 
   <h3>طريقة الدفع</h3>
-  <select id="paymentMethod">
+  <select id="paymentMethod" onchange="updatePaymentDetails()">
     <option value="cod">الدفع عند الاستلام</option>
     <option value="instapay">InstaPay</option>
     <option value="wallet">محفظة إلكترونية</option>
   </select>
+<div id="paymentDetails" style="display:none;background:#1b1b1b;padding:15px;margin-top:15px;border-radius:10px;color:white">
+  <div id="instapayDetails" style="display:none">
+    <h3>الدفع عبر InstaPay</h3>
+    <p>عنوان الدفع: <b>marwanattia2</b></p>
+    <p>حوّل المبلغ المطلوب ثم احتفظ بصورة التحويل.</p>
+  </div>
 
+  <div id="orangeDetails" style="display:none">
+    <h3>الدفع عبر Orange Cash</h3>
+    <p>رقم المحفظة: <b>01211102572</b></p>
+    <p>حوّل المبلغ المطلوب ثم احتفظ بصورة التحويل.</p>
+  </div>
+</div>
   <button onclick="submitOrder()" style="width:100%;padding:15px;margin-top:20px;background:white;color:black;border:0;border-radius:8px;font-weight:bold">
     تأكيد الطلب
   </button>
