@@ -46,7 +46,9 @@
         <div><label>المقاس</label><select id="customSize"><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option></select></div>
         <div><label>مكان التصميم</label><select id="customPlace"><option>الصدر</option><option>الظهر</option><option>الصدر والظهر</option><option>الكم</option></select></div>
       </div>
-      <label>ارفع صورة التصميم</label><input type="file" id="designFile" accept="image/*">
+      <label>ارفع صورة التصميم</label><input type="file" id="studioImages"
+       accept="image/*" multiple
+       onchange="preview360Images()">
       <label>ملاحظات إضافية</label><textarea id="designNotes" rows="3" placeholder="اكتب أي تفاصيل عن التصميم..."></textarea>
       <label>اسمك</label><input id="customName" placeholder="الاسم">
       <label>رقم الهاتف</label><input id="customPhone" placeholder="01xxxxxxxxx">
@@ -84,8 +86,13 @@
   </div>
 
   <label>اختار الهودي</label>
-  <select id="studioProduct">
-    <option value="">اختار المنتج</option>
+<select id="studioProduct">
+  <option value="">اختار المنتج</option>
+</select>
+
+<button class="secondary" onclick="load360Products()">
+  تحميل المنتجات
+</button>    <option value="">اختار المنتج</option>
   </select>
 
   <div style="
@@ -186,7 +193,118 @@ async function checkSession(){
 }
 async function adminLogout(){await db.auth.signOut();checkSession()}
 function clearProductForm(){['editId','pName','pDescription','pPrice'].forEach(id=>document.getElementById(id).value='');document.getElementById('pImage').value='';document.getElementById('formTitle').textContent='إضافة هودي جديد'}
-async function saveProduct(){
+async function load360Products() {
+  const select = document.getElementById('studioProduct');
+
+  const { data, error } = await db
+    .from('products')
+    .select('id,name')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  select.innerHTML = '<option value="">اختار المنتج</option>';
+
+  data.forEach(product => {
+    const option = document.createElement('option');
+    option.value = product.id;
+    option.textContent = product.name;
+    select.appendChild(option);
+  });
+}
+
+function preview360Images() {
+  const files = document.getElementById('studioImages').files;
+  const preview = document.getElementById('studioPreview');
+
+  preview.innerHTML = '';
+
+  Array.from(files).forEach(file => {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    img.style.width = '100%';
+    img.style.borderRadius = '10px';
+    preview.appendChild(img);
+  });
+}
+
+async function save360Images() {
+  const productId = document.getElementById('studioProduct').value;
+  const files = Array.from(
+    document.getElementById('studioImages').files
+  );
+
+  if (!productId) {
+    alert('اختار الهودي الأول');
+    return;
+  }
+
+  if (files.length < 2) {
+    alert('اختار صورتين على الأقل لعرض 360 درجة');
+    return;
+  }
+
+  if (!files.every(file => file.type.startsWith('image/'))) {
+    alert('اختار صور فقط');
+    return;
+  }
+
+  const uploadedImages = [];
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const path = '360/' + Date.now() + '-' + i + '-' +
+      file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+    const { error } = await db.storage
+      .from('ego-products')
+      .upload(path, file);
+
+    if (error) {
+      alert('فشل رفع الصورة: ' + error.message);
+      return;
+    }
+
+    const { data } = db.storage
+      .from('ego-products')
+      .getPublicUrl(path);
+
+    uploadedImages.push(data.publicUrl);
+  }
+
+  const { data: product, error: readError } = await db
+    .from('products')
+    .select('images_360')
+    .eq('id', productId)
+    .single();
+
+  if (readError) {
+    alert(readError.message);
+    return;
+  }
+
+  const oldImages = product.images_360 || [];
+
+  const { error } = await db
+    .from('products')
+    .update({
+      images_360: [...oldImages, ...uploadedImages]
+    })
+    .eq('id', productId);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert('تم حفظ صور 360 بنجاح');
+  document.getElementById('studioImages').value = '';
+  document.getElementById('studioPreview').innerHTML = '';
+}
+  async function saveProduct(){
   if(!db)return;
   const id=document.getElementById('editId').value,name=document.getElementById('pName').value.trim(),description=document.getElementById('pDescription').value.trim(),price=Number(document.getElementById('pPrice').value);
   if(!name||!Number.isFinite(price)||price<0){alert('اكتب اسم المنتج وسعر صحيح');return}
