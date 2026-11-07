@@ -65,6 +65,62 @@
     </div>
     <div id="adminPanel" class="hidden">
       <div class="notice">من هنا تقدر تضيف منتج أو تعدل بياناته وتحذفه. الصور تُرفع إلى مساحة ego-products.</div>
+      <!-- EGO 360 STUDIO -->
+<section id="studio360" style="
+  background:linear-gradient(145deg,#171717,#090909);
+  border:1px solid #682638;
+  border-radius:18px;
+  padding:22px;
+  margin:25px 0;
+  color:white;
+">
+
+  <div style="text-align:center;margin-bottom:22px">
+    <p style="color:#a94760;letter-spacing:4px;font-size:12px">
+      EGO STORE EXCLUSIVE
+    </p>
+    <h2 style="letter-spacing:2px">360° STUDIO</h2>
+    <p style="color:#aaa">Create your product experience</p>
+  </div>
+
+  <label>اختار الهودي</label>
+  <select id="studioProduct">
+    <option value="">اختار المنتج</option>
+  </select>
+
+  <div style="
+    border:1px dashed #8b4055;
+    border-radius:14px;
+    padding:25px;
+    text-align:center;
+    margin-top:18px;
+  ">
+    <h3>UPLOAD YOUR ANGLES</h3>
+    <p style="color:#aaa">ارفع صور الهودي من زوايا مختلفة</p>
+
+    <input
+      type="file"
+      id="studioImages"
+      accept="image/*"
+      multiple
+    >
+  </div>
+
+  <div id="studioPreview"
+       style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px">
+  </div>
+
+  <button
+    onclick="save360Images()"
+    style="width:100%;margin-top:20px;background:#762b43;color:white;padding:14px;border-radius:10px">
+    حفظ صور 360°
+  </button>
+
+  <p style="color:#aaa;text-align:center;font-size:12px">
+    EGO STORE · 360 PRODUCT EXPERIENCE
+  </p>
+
+</section>
       <h3 id="formTitle">إضافة هودي جديد</h3>
       <input id="editId" type="hidden">
       <label>اسم المنتج</label><input id="pName">
