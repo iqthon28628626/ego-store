@@ -170,21 +170,31 @@ async function submitOrder(){
     alert('اكتب الاسم ورقم الهاتف والعنوان');
     return;
   }
- function updatePaymentDetails() {
+function updatePaymentDetails() {
   const method = document.getElementById('paymentMethod').value;
 
   const details = document.getElementById('paymentDetails');
   const instapay = document.getElementById('instapayDetails');
   const wallet = document.getElementById('walletDetails');
 
-  details.style.display = method === 'cod' ? 'none' : 'block';
-  instapay.style.display = method === 'instapay' ? 'block' : 'none';
-  wallet.style.display = method === 'wallet' ? 'block' : 'none';
-}
+  details.style.setProperty(
+    'display',
+    method === 'cod' ? 'none' : 'block',
+    'important'
+  );
 
-document.addEventListener('DOMContentLoaded', function() {
-  updatePaymentDetails();
-});
+  instapay.style.setProperty(
+    'display',
+    method === 'instapay' ? 'block' : 'none',
+    'important'
+  );
+
+  wallet.style.setProperty(
+    'display',
+    method === 'wallet' ? 'block' : 'none',
+    'important'
+  );
+}
   if(!selectedOrder){
     alert('لم يتم تحديد المنتج');
     return;
