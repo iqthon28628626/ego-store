@@ -161,13 +161,121 @@ function showPage(page){
 }
 function msg(t){let el=document.getElementById('status');el.textContent=t;el.classList.remove('hidden')}
 function money(n){return Number(n||0).toLocaleString('ar-EG')+' ج.م'}
-async function loadProducts(){
+const product360Indexes = {};
+
+function move360(productId, direction) {
+  const product = productsCache.find(
+    p => String(p.id) === String(productId)
+  );
+function enable360Swipe() {
+  document.querySelectorAll('[id^="product360_"]').forEach(img => {
+    if (img.dataset.swipeReady) return;
+
+    img.dataset.swipeReady = 'true';
+
+    let startX = 0;
+
+    img.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+    });
+
+    img.addEventListener('touchend', e => {
+      const diff = e.changedTouches[0].clientX - startX;
+
+      if (Math.abs(diff) > 35) {
+        const id = img.id.replace('product360_', '');
+        move360(id, diff < 0 ? 1 : -1);
+      }
+    });
+
+    img.addEventListener('mousedown', e => {
+      startX = e.clientX;
+    });
+
+    img.addEventListener('mouseup', e => {
+      const diff = e.clientX - startX;
+
+      if (Math.abs(diff) > 35) {
+        const id = img.id.replace('product360_', '');
+        move360(id, diff < 0 ? 1 : -1);
+      }
+    });
+  });
+}
+  if (!product || !Array.isArray(product.images_360)) return;
+
+  const images = product.images_360;
+
+  if (images.length === 0) return;
+
+  if (product360Indexes[productId] === undefined) {
+    product360Indexes[productId] = 0;
+  }
+
+  let index = product360Indexes[productId];
+
+  index = (index + direction + images.length) % images.length;
+
+  product360Indexes[productId] = index;
+
+  const image = document.getElementById('product360_' + productId);
+
+  if (image) {
+    image.src = images[index];
+  }
+}
+  async function loadProducts(){
   const box=document.getElementById('products');
-  if(!db){box.innerHTML='<div class="notice">اربط الموقع ببيانات Supabase أولاً من داخل index.html.</div>';return}
-  const {data,error}=await db.from('products').select('*').eq('active',true).order('created_at',{ascending:false});
-  if(error){box.innerHTML='<div class="notice">تعذر تحميل المنتجات: '+error.message+'</div>';return}
+
+  if(!db){
+    box.innerHTML='<div class="notice">اربط الموقع ببيانات Supabase أولاً.</div>';
+    return;
+  }
+
+  const {data,error}=await db.from('products')
+    .select('*')
+    .eq('active',true)
+    .order('created_at',{ascending:false});
+
+  if(error){
+    box.innerHTML='<div class="notice">تعذر تحميل المنتجات: '+error.message+'</div>';
+    return;
+  }
+
   productsCache=data||[];
-  box.innerHTML=productsCache.length?productsCache.map(p=>`<article class="card"><img src="${escapeHtml(p.image_url||'')}" alt=""><h3>${escapeHtml(p.name)}</h3><p class="muted">${escapeHtml(p.description||'')}</p><div class="price">${money(p.price)}</div><button onclick="orderReady('${p.id}')">اطلب الآن</button></article>`).join(''):'<div class="notice">لا توجد منتجات حالياً. أضف منتجات من لوحة الإدارة.</div>';
+
+  box.innerHTML=productsCache.length
+    ? productsCache.map(p=>{
+        const images=Array.isArray(p.images_360)?p.images_360:[];
+        const has360=images.length>0;
+        const firstImage=has360?images[0]:(p.image_url||'');
+
+        return `
+          <article class="card">
+            <div style="position:relative;background:#111;border-radius:12px;overflow:hidden">
+              <img id="product360_${p.id}"
+                src="${escapeHtml(firstImage)}"
+                alt="${escapeHtml(p.name)}"
+                style="width:100%;display:block;object-fit:contain">
+
+              ${has360?`
+                <div style="display:flex;justify-content:center;align-items:center;gap:18px;padding:10px">
+                  <button onclick="move360('${p.id}',-1)" class="secondary">❮</button>
+                  <span style="color:#aaa;font-size:12px">360° VIEW</span>
+                  <button onclick="move360('${p.id}',1)" class="secondary">❯</button>
+           enable360Swipe();
+                </div>
+              `:''}
+            </div>
+
+            <h3>${escapeHtml(p.name)}</h3>
+            <p class="muted">${escapeHtml(p.description||'')}</p>
+            <div class="price">${money(p.price)}</div>
+            <button onclick="orderReady('${p.id}')">اطلب الآن</button>
+          </article>
+        `;
+      }).join('')
+    : '<div class="notice">لا توجد منتجات حالياً.</div>';
 }
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function orderReady(id){
