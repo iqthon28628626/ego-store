@@ -414,7 +414,9 @@ async function createEGO3D() {
       }).join('')
     : '<div class="notice">لا توجد منتجات حالياً.</div>';
 enable360Swipe();
-    createEGO3D();
+  createEGO3D().catch(error => {
+  console.error('EGO 3D Error:', error);
+});
 
   }
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
