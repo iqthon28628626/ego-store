@@ -268,7 +268,108 @@ function enable360Swipe() {
     box.innerHTML='<div class="notice">اربط الموقع ببيانات Supabase أولاً.</div>';
     return;
   }
+async function createEGO3D() {
+  const section = document.getElementById('ego3DSection');
+  const viewer = document.getElementById('ego3DViewer');
 
+  if (!section || !viewer || viewer.dataset.ready) return;
+
+  viewer.dataset.ready = 'true';
+  section.style.display = 'block';
+
+  const THREE = await import('three');
+  const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(
+    35,
+    viewer.clientWidth / viewer.clientHeight,
+    0.1,
+    100
+  );
+
+  camera.position.set(0, 1, 6);
+
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true
+  });
+
+  renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  viewer.appendChild(renderer.domElement);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.minDistance = 4;
+  controls.maxDistance = 9;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 2));
+
+  const light = new THREE.DirectionalLight(0xffffff, 3);
+  light.position.set(3, 5, 5);
+  scene.add(light);
+
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x171717,
+    roughness: 0.85,
+    metalness: 0.05
+  });
+
+  const hoodie = new THREE.Group();
+
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(1.8, 2.1, 0.55),
+    material
+  );
+
+  hoodie.add(body);
+
+  const sleeveGeometry = new THREE.CylinderGeometry(
+    0.23, 0.3, 1.5, 16
+  );
+
+  const leftSleeve = new THREE.Mesh(sleeveGeometry, material);
+  leftSleeve.position.set(-1.05, 0.25, 0);
+  leftSleeve.rotation.z = 0.35;
+  hoodie.add(leftSleeve);
+
+  const rightSleeve = new THREE.Mesh(sleeveGeometry, material);
+  rightSleeve.position.set(1.05, 0.25, 0);
+  rightSleeve.rotation.z = -0.35;
+  hoodie.add(rightSleeve);
+
+  const hood = new THREE.Mesh(
+    new THREE.SphereGeometry(0.48, 24, 16),
+    material
+  );
+
+  hood.scale.set(1, 1.1, 0.65);
+  hood.position.set(0, 1.05, -0.12);
+  hoodie.add(hood);
+
+  scene.add(hoodie);
+
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    const width = viewer.clientWidth;
+    const height = viewer.clientHeight;
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+  });
+}
   const {data,error}=await db.from('products')
     .select('*')
     .eq('active',true)
