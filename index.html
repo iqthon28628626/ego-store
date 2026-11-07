@@ -263,7 +263,6 @@ function enable360Swipe() {
                   <button onclick="move360('${p.id}',-1)" class="secondary">❮</button>
                   <span style="color:#aaa;font-size:12px">360° VIEW</span>
                   <button onclick="move360('${p.id}',1)" class="secondary">❯</button>
-           enable360Swipe();
                 </div>
               `:''}
             </div>
@@ -276,7 +275,8 @@ function enable360Swipe() {
         `;
       }).join('')
     : '<div class="notice">لا توجد منتجات حالياً.</div>';
-}
+enable360Swipe();
+  }
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function orderReady(id){
   const p=productsCache.find(x=>x.id===id);
