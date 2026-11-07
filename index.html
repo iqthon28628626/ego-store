@@ -248,13 +248,14 @@ init();
   <input id="orderSize" placeholder="المقاس: S / M / L / XL">
   <input id="orderColor" placeholder="اللون">
   <input id="orderQuantity" type="number" min="1" value="1">
+<h3>طريقة الدفع</h3>
 
-  <h3>طريقة الدفع</h3>
-  <select id="paymentMethod" onchange="updatePaymentDetails()">
-    <option value="cod">الدفع عند الاستلام</option>
-    <option value="instapay">InstaPay</option>
-    <option value="wallet">محفظة إلكترونية</option>
-  </select>
+<select id="paymentMethod" onchange="updatePaymentDetails()">
+  <option value="cod">الدفع عند الاستلام</option>
+  <option value="instapay">InstaPay</option>
+  <option value="wallet">محفظة إلكترونية</option>
+</select>
+
 <div id="paymentDetails" style="display:none;background:#1b1b1b;padding:15px;margin-top:15px;border-radius:10px;color:white">
 
   <div id="instapayDetails" style="display:none">
@@ -268,6 +269,21 @@ init();
     <p>رقم المحفظة: <b dir="ltr">01211102572</b></p>
     <p>حوّل المبلغ المطلوب ثم احتفظ بصورة التحويل.</p>
   </div>
+
+  <hr style="border-color:#444;margin:15px 0">
+
+  <h3>إرفاق صورة التحويل</h3>
+  <p>ارفع صورة توضح إتمام عملية الدفع:</p>
+
+  <input
+    type="file"
+    id="transferImage"
+    accept="image/*"
+    style="width:100%;padding:10px;background:white;color:black;border-radius:8px"
+  >
+
+</div>
+ 
   
 </div>
   <button onclick="submitOrder()" style="width:100%;padding:15px;margin-top:20px;background:white;color:black;border:0;border-radius:8px;font-weight:bold">
