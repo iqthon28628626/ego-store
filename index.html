@@ -104,13 +104,14 @@
   ">
     <h3>UPLOAD YOUR ANGLES</h3>
     <p style="color:#aaa">ارفع صور الهودي من زوايا مختلفة</p>
-
-    <input
-      type="file"
-      id="studioImages"
-      accept="image/*"
-      multiple
-    >
+<input
+  type="file"
+  id="studioImages"
+  accept="image/*"
+  multiple
+  onchange="preview360Images()"
+>
+  
   </div>
 
   <div id="studioPreview"
@@ -217,8 +218,8 @@ async function load360Products() {
 }
 
 function preview360Images() {
-  const files = document.getElementById('studioImages').files;
-  const preview = document.getElementById('studioPreview');
+ const files = document.getElementById('studioImages').files;
+  tElementById('studioPreview')const preview = document.ge ;
 
   preview.innerHTML = '';
 
