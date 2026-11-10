@@ -447,101 +447,142 @@ async function editProduct(id){
   document.getElementById('editId').value=p.id;document.getElementById('pName').value=p.name;document.getElementById('pDescription').value=p.description||'';document.getElementById('pPrice').value=p.price;document.getElementById('formTitle').textContent='تعديل المنتج';
 }
 async function deleteProduct(id){if(!confirm('متأكد من حذف المنتج؟'))return;const {error}=await db.from('products').delete().eq('id',id);if(error){msg(error.message);return}loadProducts();loadAdminProducts()}
+
 let selectedOrder = null;
 
-async function submitOrder(){
-  if(!db){alert('الاتصال بقاعدة البيانات غير جاهز');return}
-
-  const name=document.getElementById('orderName').value.trim();
-  const phone=document.getElementById('orderPhone').value.trim();
-  const address=document.getElementById('orderAddress').value.trim();
-
-  if(!name||!phone||!address){
-    alert('اكتب الاسم ورقم الهاتف والعنوان');
-    return;
-  }
 function updatePaymentDetails() {
   const method = document.getElementById('paymentMethod').value;
-
   const details = document.getElementById('paymentDetails');
   const instapay = document.getElementById('instapayDetails');
   const wallet = document.getElementById('walletDetails');
 
-  details.style.setProperty(
-    'display',
-    method === 'cod' ? 'none' : 'block',
-    'important'
-  );
-
-  instapay.style.setProperty(
-    'display',
-    method === 'instapay' ? 'block' : 'none',
-    'important'
-  );
-
-  wallet.style.setProperty(
-    'display',
-    method === 'wallet' ? 'block' : 'none',
-    'important'
-  );
+  details.style.display = method === 'cod' ? 'none' : 'block';
+  instapay.style.display = method === 'instapay' ? 'block' : 'none';
+  wallet.style.display = method === 'wallet' ? 'block' : 'none';
 }
-  if(!selectedOrder){
+
+async function submitOrder() {
+  if (!db) {
+    alert('الاتصال بقاعدة البيانات غير جاهز');
+    return;
+  }
+
+  const name = document.getElementById('orderName').value.trim();
+  const phone = document.getElementById('orderPhone').value.trim();
+  const address = document.getElementById('orderAddress').value.trim();
+  const method = document.getElementById('paymentMethod').value;
+  const file = document.getElementById('transferImage').files[0];
+
+  if (!name || !phone || !address) {
+    alert('اكتب الاسم ورقم الهاتف والعنوان');
+    return;
+  }
+
+  if (!selectedOrder) {
     alert('لم يتم تحديد المنتج');
     return;
   }
 
-  const quantity=Number(document.getElementById('orderQuantity').value);
-  if(!Number.isInteger(quantity)||quantity<1){
+  if (!['cod', 'instapay', 'wallet'].includes(method)) {
+    alert('اختار طريقة دفع صحيحة');
+    return;
+  }
+
+  if (method !== 'cod') {
+    if (!file) {
+      alert('ارفع صورة التحويل أولاً');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      alert('الملف لازم يكون صورة');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('حجم الصورة يجب ألا يتجاوز 5 ميجابايت');
+      return;
+    }
+  }
+
+  const quantity = Number(document.getElementById('orderQuantity').value);
+
+  if (!Number.isInteger(quantity) || quantity < 1) {
     alert('اكتب كمية صحيحة');
     return;
   }
-const price = Number(selectedOrder.price);
-const shipping = 0;
-const subtotal = price * quantity;
-const total = subtotal + shipping;
 
-const {error}=await db.from('orders').insert([{
-  name,
-  customer_name: name,
-  phone,
-  address,
-  items: [{
-    name: selectedOrder.name,
-    price: price,
-    quantity: quantity,
+  const price = Number(selectedOrder.price);
+  const shipping = 0;
+  const subtotal = price * quantity;
+  const total = subtotal + shipping;
+
+  let proofPath = null;
+
+  if (method !== 'cod') {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    proofPath = 'proofs/' + Date.now() + '-' + safeName;
+
+    const { error: uploadError } = await db.storage
+      .from('payment-proofs')
+      .upload(proofPath, file);
+
+    if (uploadError) {
+      alert('فشل رفع صورة التحويل: ' + uploadError.message);
+      return;
+    }
+  }
+
+  const { error } = await db.from('orders').insert([{
+    name,
+    customer_name: name,
+    phone,
+    address,
+    items: [{
+      name: selectedOrder.name,
+      price,
+      quantity,
+      size: document.getElementById('orderSize').value,
+      color: document.getElementById('orderColor').value
+    }],
+    subtotal,
+    shipping,
+    total,
+    product_name: selectedOrder.name,
+    product_price: price,
+    quantity,
     size: document.getElementById('orderSize').value,
-    color: document.getElementById('orderColor').value
-  }],
-  subtotal,
-  shipping,
-  total,
-  product_name: selectedOrder.name,
-  product_price: price,
-  quantity,
-  size: document.getElementById('orderSize').value,
-  color: document.getElementById('orderColor').value,
-  payment_method: document.getElementById('paymentMethod').value
-}]);
-  if(error){
-    alert('حصل خطأ: '+error.message);
+    color: document.getElementById('orderColor').value,
+    payment_method: method,
+    payment_status: method === 'cod' ? 'pending' : 'pending_review',
+    payment_proof_path: proofPath
+  }]);
+
+  if (error) {
+    alert('حصل خطأ أثناء حفظ الطلب: ' + error.message);
     return;
   }
 
-  document.getElementById('successPage').style.display='flex';
-document.getElementById('successPage').scrollIntoView({behavior:'smooth'});
+  document.getElementById('successPage').style.display = 'flex';
+  document.getElementById('successPage').scrollIntoView({ behavior: 'smooth' });
 }
- async function sendCustomOrder(){
-  selectedOrder={
-    name:'تصميم هودي مخصص',
-    price:0
+
+async function sendCustomOrder() {
+  selectedOrder = {
+    name: 'تصميم هودي مخصص',
+    price: 0
   };
 
-  document.getElementById('checkoutPage').style.display='block';
-  document.getElementById('checkoutPage').scrollIntoView({behavior:'smooth'});
+  document.getElementById('checkoutPage').style.display = 'block';
+  document.getElementById('checkoutPage').scrollIntoView({ behavior: 'smooth' });
 }
+
 init();
+
 </script>
+
 <section id="checkoutPage" style="display:none;max-width:650px;margin:40px auto;padding:25px;background:#111;color:white;border:1px solid #333;border-radius:15px">
+
   <h2 style="text-align:center">EGO STORE | إتمام الطلب</h2>
 
   <input id="orderName" placeholder="الاسم بالكامل" required>
@@ -551,49 +592,49 @@ init();
   <input id="orderSize" placeholder="المقاس: S / M / L / XL">
   <input id="orderColor" placeholder="اللون">
   <input id="orderQuantity" type="number" min="1" value="1">
-<h3>طريقة الدفع</h3>
 
-<select id="paymentMethod" onchange="updatePaymentDetails()">
-  <option value="cod">الدفع عند الاستلام</option>
-  <option value="instapay">InstaPay</option>
-  <option value="wallet">محفظة إلكترونية</option>
-</select>
+  <h3>طريقة الدفع</h3>
 
-<div id="paymentDetails" style="display:none;background:#1b1b1b;padding:15px;margin-top:15px;border-radius:10px;color:white">
+  <select id="paymentMethod" onchange="updatePaymentDetails()">
+    <option value="cod">الدفع عند الاستلام</option>
+    <option value="instapay">InstaPay</option>
+    <option value="wallet">محفظة إلكترونية</option>
+  </select>
 
-  <div id="instapayDetails" style="display:none">
-    <h3>الدفع عبر InstaPay</h3>
-    <p>عنوان الدفع: <b>marwanattia2</b></p>
-    <p>حوّل المبلغ المطلوب ثم احتفظ بصورة التحويل.</p>
+  <div id="paymentDetails" style="display:none;background:#1b1b1b;padding:15px;margin-top:15px;border-radius:10px;color:white">
+
+    <div id="instapayDetails" style="display:none">
+      <h3>الدفع عبر InstaPay</h3>
+      <p>عنوان الدفع: <b>marwanattia2</b></p>
+      <p>حوّل المبلغ المطلوب ثم احتفظ بصورة التحويل.</p>
+    </div>
+
+    <div id="walletDetails" style="display:none">
+      <h3>الدفع عبر Orange Cash</h3>
+      <p>رقم المحفظة: <b dir="ltr">01211102572</b></p>
+      <p>حوّل المبلغ المطلوب ثم احتفظ بصورة التحويل.</p>
+    </div>
+
+    <hr style="border-color:#444;margin:15px 0">
+
+    <h3>إرفاق صورة التحويل</h3>
+    <p>ارفع صورة توضح إتمام عملية الدفع:</p>
+
+    <input
+      type="file"
+      id="transferImage"
+      accept="image/*"
+      style="width:100%;padding:10px;background:white;color:black;border-radius:8px"
+    >
+
   </div>
 
-  <div id="walletDetails" style="display:none">
-    <h3>الدفع عبر Orange Cash</h3>
-    <p>رقم المحفظة: <b dir="ltr">01211102572</b></p>
-    <p>حوّل المبلغ المطلوب ثم احتفظ بصورة التحويل.</p>
-  </div>
-</div>
-  
-  <hr style="border-color:#444;margin:15px 0">
-
-  <h3>إرفاق صورة التحويل</h3>
-  <p>ارفع صورة توضح إتمام عملية الدفع:</p>
-
-  <input
-    type="file"
-    id="transferImage"
-    accept="image/*"
-    style="width:100%;padding:10px;background:white;color:black;border-radius:8px"
-  >
-
-</div>
- 
-  
-</div>
   <button onclick="submitOrder()" style="width:100%;padding:15px;margin-top:20px;background:white;color:black;border:0;border-radius:8px;font-weight:bold">
     تأكيد الطلب
   </button>
-</section> 
+
+</section>
+
 <style>
 #successPage{
   display:none;
