@@ -327,8 +327,14 @@ async function createEGO3D() {
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
+ controls.enableRotate = true;
+controls.enableZoom = true;
+controls.enablePan = false;
+controls.autoRotate = false;
+controls.rotateSpeed = 0.8;
+controls.zoomSpeed = 0.8;
   controls.minDistance = 4;
-  controls.maxDistance = 9;
+ controls.maxDistance = 9;
 
   scene.add(new THREE.AmbientLight(0xffffff, 2));
 
@@ -342,39 +348,224 @@ async function createEGO3D() {
     metalness: 0.05
   });
 
-  const hoodie = new THREE.Group();
+ 
+const hoodie = new THREE.Group();
 
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(1.8, 2.1, 0.55),
-    material
-  );
+const fabric = new THREE.MeshStandardMaterial({
+  color: document.getElementById('customColor').value === 'أبيض'
+    ? 0xf2f2f2
+    : document.getElementById('customColor').value === 'رمادي'
+    ? 0x888888
+    : document.getElementById('customColor').value === 'بيج'
+    ? 0xc8b99a
+    : 0x171717,
+  roughness: 0.95
+});
+});
 
-  hoodie.add(body);
+const ribbed = new THREE.MeshStandardMaterial({
+  color: 0x101010,
+  roughness: 1
+});
 
-  const sleeveGeometry = new THREE.CylinderGeometry(
-    0.23, 0.3, 1.5, 16
-  );
+// جسم الهودي الواسع
+const body = new THREE.Mesh(
+  new THREE.BoxGeometry(2.05, 2.25, 0.72, 12, 12, 4),
+  fabric
+);
+body.position.y = -0.05;
+hoodie.add(body);
 
-  const leftSleeve = new THREE.Mesh(sleeveGeometry, material);
-  leftSleeve.position.set(-1.05, 0.25, 0);
-  leftSleeve.rotation.z = 0.35;
-  hoodie.add(leftSleeve);
+// الأكمام
+const sleeveGeometry = new THREE.CylinderGeometry(
+  0.27, 0.36, 1.65, 24, 8
+);
 
-  const rightSleeve = new THREE.Mesh(sleeveGeometry, material);
-  rightSleeve.position.set(1.05, 0.25, 0);
-  rightSleeve.rotation.z = -0.35;
-  hoodie.add(rightSleeve);
+const leftSleeve = new THREE.Mesh(sleeveGeometry, fabric);
+leftSleeve.position.set(-1.12, 0.12, 0);
+leftSleeve.rotation.z = 0.42;
+hoodie.add(leftSleeve);
 
-  const hood = new THREE.Mesh(
-    new THREE.SphereGeometry(0.48, 24, 16),
-    material
-  );
+const rightSleeve = new THREE.Mesh(sleeveGeometry, fabric);
+rightSleeve.position.set(1.12, 0.12, 0);
+rightSleeve.rotation.z = -0.42;
+hoodie.add(rightSleeve);
 
-  hood.scale.set(1, 1.1, 0.65);
-  hood.position.set(0, 1.05, -0.12);
-  hoodie.add(hood);
+// أساور الأكمام
+const cuffGeometry = new THREE.CylinderGeometry(
+  0.25, 0.29, 0.22, 24
+);
 
-  scene.add(hoodie);
+const leftCuff = new THREE.Mesh(cuffGeometry, ribbed);
+leftCuff.position.set(-1.48, -0.43, 0);
+leftCuff.rotation.z = 0.42;
+hoodie.add(leftCuff);
+
+const rightCuff = new THREE.Mesh(cuffGeometry, ribbed);
+rightCuff.position.set(1.48, -0.43, 0);
+rightCuff.rotation.z = -0.42;
+hoodie.add(rightCuff);
+
+// حافة أسفل الهودي
+const hem = new THREE.Mesh(
+  new THREE.BoxGeometry(2.06, 0.22, 0.74),
+  ribbed
+);
+hem.position.y = -1.18;
+hoodie.add(hem);
+
+// الكابيشو
+const hood = new THREE.Mesh(
+  new THREE.SphereGeometry(0.55, 32, 24),
+  fabric
+);
+hood.scale.set(1, 1.15, 0.8);
+hood.position.set(0, 1.12, -0.25);
+hoodie.add(hood);
+
+scene.add(hoodie);
+
+const designMaterial = new THREE.MeshBasicMaterial({
+  transparent: true,
+  side: THREE.DoubleSide,
+  depthTest: true
+});
+
+
+const chestDesign = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.65, 0.65),
+  designMaterial
+);
+
+chestDesign.position.set(0, 0.15, 0.371);
+chestDesign.visible = false;
+hoodie.add(chestDesign);
+
+const backDesign = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.65, 0.65),
+  designMaterial.clone()
+);
+
+backDesign.position.set(0, 0.15, -0.371);
+backDesign.rotation.y = Math.PI;
+backDesign.visible = false;
+hoodie.add(backDesign);
+
+
+const designInput = document.getElementById('designFile');
+
+designInput.addEventListener('change', () => {
+  
+const customPlace = document.getElementById('customPlace');
+
+function updateDesignPosition() {
+  const place = customPlace.value;
+  
+chestDesign.position.set(0, 0.15, 0.371);
+chestDesign.rotation.set(0, 0, 0);
+
+backDesign.position.set(0, 0.15, -0.371);
+backDesign.rotation.set(0, Math.PI, 0);
+
+const defaultScale = Number(designSize.value) / 100;
+chestDesign.scale.set(defaultScale, defaultScale, defaultScale);
+backDesign.scale.set(defaultScale, defaultScale, defaultScale);
+  chestDesign.visible = true;
+
+  if (place === 'الصدر') {
+    chestDesign.position.set(0, 0.15, 0.371);
+    chestDesign.scale.set(1, 1, 1);
+  }
+
+  else if (place === 'الظهر') {
+    chestDesign.position.set(0, 0.15, -0.371);
+    chestDesign.rotation.y = Math.PI;
+    chestDesign.scale.set(1, 1, 1);
+  }
+
+  else if (place === 'الصدر والظهر') {
+    chestDesign.position.set(0, 0.15, 0.371);
+    chestDesign.rotation.y = 0;
+  }
+
+  else if (place === 'الكم') {
+    chestDesign.position.set(-1.15, 0.15, 0.27);
+    chestDesign.rotation.y = Math.PI / 2;
+    chestDesign.scale.set(0.65, 0.65, 0.65);
+  }
+}
+
+customPlace.addEventListener('change', updateDesignPosition);
+  
+const designSize = document.createElement('input');
+
+designSize.type = 'range';
+designSize.min = '40';
+designSize.max = '130';
+designSize.value = '100';
+designSize.style.width = '100%';
+designSize.style.marginTop = '12px';
+
+const designLabel = document.createElement('label');
+designLabel.textContent = 'حجم التصميم';
+
+customPlace.parentElement.appendChild(designLabel);
+customPlace.parentElement.appendChild(designSize);
+
+designSize.addEventListener('input', () => {
+  const scale = Number(designSize.value) / 100;
+
+  chestDesign.scale.set(scale, scale, scale);
+  backDesign.scale.set(scale, scale, scale);
+});
+
+
+  const file = designInput.files[0];
+
+  if (!file) return;
+
+  const imageURL = URL.createObjectURL(file);
+
+ 
+new THREE.TextureLoader().load(imageURL, texture => {
+  texture.colorSpace = THREE.SRGBColorSpace;
+
+  const backTexture = texture.clone();
+  backTexture.needsUpdate = true;
+
+  designMaterial.map = texture;
+  designMaterial.needsUpdate = true;
+
+  backDesign.material.map = backTexture;
+  backDesign.material.needsUpdate = true;
+
+  chestDesign.visible = true;
+  backDesign.visible = true;
+
+  updateDesignPosition();
+
+  URL.revokeObjectURL(imageURL);
+});
+
+const customColor = document.getElementById('customColor');
+
+function updateHoodieColor() {
+  const colors = {
+    'أبيض': 0xf2f2f2,
+    'أسود': 0x171717,
+    'رمادي': 0x888888,
+    'بيج': 0xc8b99a
+  };
+
+  const selectedColor = colors[customColor.value] || 0x171717;
+
+  fabric.color.setHex(selectedColor);
+  ribbed.color.setHex(selectedColor);
+}
+
+customColor.addEventListener('change', updateHoodieColor);
+updateHoodieColor();
+
 
   function animate() {
     requestAnimationFrame(animate);
