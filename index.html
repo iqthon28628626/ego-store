@@ -562,10 +562,34 @@ async function submitOrder() {
     alert('حصل خطأ أثناء حفظ الطلب: ' + error.message);
     return;
   }
+  
+const paymentName = {
+  cod: 'الدفع عند الاستلام',
+  instapay: 'InstaPay',
+  wallet: 'Orange Cash'
+};
 
-  document.getElementById('successPage').style.display = 'flex';
-  document.getElementById('successPage').scrollIntoView({ behavior: 'smooth' });
-}
+const message = `مرحباً EGO STORE 👋
+عايز أأكد الأوردر الخاص بيا 🖤
+
+👤 الاسم: ${name}
+📱 رقم الهاتف: ${phone}
+📍 العنوان: ${address}
+
+🛍️ المنتج: ${selectedOrder.name}
+📏 المقاس: ${document.getElementById('orderSize').value}
+🎨 اللون: ${document.getElementById('orderColor').value}
+🔢 الكمية: ${quantity}
+
+💳 طريقة الدفع: ${paymentName[method]}
+💰 إجمالي الطلب: ${total} جنيه
+
+شكراً ليكم ❤️`;
+
+const whatsappURL = 'https://wa.me/201211102572?text=' + encodeURIComponent(message);
+
+window.location.href = whatsappURL;
+
 
 async function sendCustomOrder() {
   selectedOrder = {
